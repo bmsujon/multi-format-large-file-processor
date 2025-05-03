@@ -1,7 +1,7 @@
 package com.wahid.multi_format_large_file_processor.controller;
 
+import com.wahid.multi_format_large_file_processor.dto.ProcessingSummary;
 import com.wahid.multi_format_large_file_processor.service.FileProcessingService;
-import com.wahid.multi_format_large_file_processor.service.FileProcessingService.FileProcessingSummary;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -64,8 +64,8 @@ public class CustomerUploadController {
             deprecated = true // Mark as deprecated in OpenAPI spec
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Processing successful", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = FileProcessingSummary.class))),
-            @ApiResponse(responseCode = "202", description = "Processing completed with processingErrors", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = FileProcessingSummary.class))),
+            @ApiResponse(responseCode = "200", description = "Processing successful", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProcessingSummary.class))),
+            @ApiResponse(responseCode = "202", description = "Processing completed with processingErrors", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProcessingSummary.class))),
             @ApiResponse(responseCode = "400", description = "Bad Request (e.g., empty file, invalid file type)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error during processing")
     })
@@ -83,13 +83,14 @@ public class CustomerUploadController {
         }
 
         try {
-            FileProcessingSummary summary = fileProcessingService.processAndSave(
+            ProcessingSummary summary = fileProcessingService.processFile(
                     file.getInputStream(),
                     fileType,
+                    file.getOriginalFilename(),
                     createdBy
             );
 
-            if (!summary.errors().isEmpty()) {
+            if (!summary.processingErrors().isEmpty()) {
                 log.info("Synchronous processing completed with processingErrors for file '{}'. Summary: {}", file.getOriginalFilename(), summary);
                 return ResponseEntity.status(HttpStatus.ACCEPTED).body(summary);
             } else {
